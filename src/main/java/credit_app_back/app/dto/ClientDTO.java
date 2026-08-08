@@ -20,9 +20,18 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ClientDto {
     @NotBlank
-    @Size(min = 1, max = 200)
-    @Pattern(regexp = "^[A-Za-zА-Яа-я\\s'-]+$", message = "Invalid full name format")
-    private String fullName;
+    @Size(min = 1, max = 64)
+    @Pattern(regexp = "^[A-Za-z][a-z]*(?:[\\s'-][A-Za-z][a-z]*)*$", message = "Invalid first name format")
+    private String firstName;
+
+    @NotBlank
+    @Size(min = 1, max = 64)
+    @Pattern(regexp = "^[A-Za-z][a-z]*(?:[\\s'-][A-Za-z][a-z]*)*$", message = "Invalid last name format")
+    private String lastName;
+
+    @Size(min = 1, max = 64)
+    @Pattern(regexp = "^[A-Za-z][a-z]*(?:[\\s'-][A-Za-z][a-z]*)*$", message = "Invalid middle name format")
+    private String middleName;
 
     @NotBlank
     @Pattern(regexp = "^[0-9]{10}$", message = "Invalid passport format")
