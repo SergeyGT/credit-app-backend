@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ClientDTO{
+public class ClientDto {
     @NotBlank
     @Size(min = 1, max = 200)
     @Pattern(regexp = "^[A-Za-zА-Яа-я\\s'-]+$", message = "Invalid full name format")
