@@ -15,7 +15,6 @@ public interface CreditAgreementRepository extends JpaRepository<CreditAgreement
     List<CreditAgreement> findAll();
     List<CreditAgreement> findBySignStatus(CreditAgreeStatus signStatus);
         
-    // Или если хотите искать по статусу SIGNED
     default List<CreditAgreement> findSigned() {
         return findBySignStatus(CreditAgreeStatus.SIGNED);
     }
