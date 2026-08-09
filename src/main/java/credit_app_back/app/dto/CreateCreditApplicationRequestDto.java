@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CreateCreditApplicationRequest {
+public class CreateCreditApplicationRequestDto {
 
     private ClientDto client;
     
