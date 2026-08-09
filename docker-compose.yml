@@ -19,5 +19,18 @@ services:
       timeout: 5s
       retries: 5
 
+  backend:
+    build: .
+    container_name: credit-backend
+    depends_on:
+      db_credit_app:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db_credit_app:5432/db_credit_app
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 2411
+    ports:
+      - "8080:8080"
+      
 volumes:
   postgres_data:

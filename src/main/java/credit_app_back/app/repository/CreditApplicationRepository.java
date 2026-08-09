@@ -13,6 +13,10 @@ import credit_app_back.app.entity.CreditApplicationStatus;
 public interface CreditApplicationRepository extends JpaRepository<CreditApplication, Long> {
     Optional<CreditApplication> findById(Long id);
     List<CreditApplication> findAll();
-    List<CreditApplication> findByStatus(CreditApplicationStatus status);    
-    List<CreditApplication> findByStatusApproved();    
+    List<CreditApplication> findByStatus(CreditApplicationStatus status);
+    
+    default List<CreditApplication> findApproved() {
+        return findByStatus(CreditApplicationStatus.APPROVED);
+    }
+    List<CreditApplication> findByClientIdAndStatus(Long clientId, CreditApplicationStatus status);
 }
