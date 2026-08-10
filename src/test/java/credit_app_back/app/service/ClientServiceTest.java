@@ -100,6 +100,32 @@ class ClientServiceTest {
     }
 
     @Test
+    void findClients_byLastName_usesRepositoryMethod() {
+        FindClientsDto filters = new FindClientsDto();
+        filters.setLastName("Козлов");
+        when(clientValidator.validateFindClientsDto(filters)).thenReturn(Optional.empty());
+
+        Client client = new Client();
+        client.setFirstName("Иван");
+        client.setLastName("Козлов");
+
+        Page<Client> clientPage = new PageImpl<>(List.of(client), PageRequest.of(0, 10), 1);
+        when(clientRepository.findClientsByFilters(
+            isNull(), eq("%Козлов%"), isNull(), isNull(), isNull(), isNull(), any(org.springframework.data.domain.Pageable.class)
+        )).thenReturn(clientPage);
+
+        ClientDto dto = new ClientDto();
+        dto.setFirstName("Иван");
+        dto.setLastName("Козлов");
+        when(clientMapper.toDto(client)).thenReturn(dto);
+
+        PageResponseDto<ClientDto> result = clientService.findClients(0, filters);
+
+        assertThat(result.getTotal()).isEqualTo(1);
+        assertThat(result.getData()).containsExactly(dto);
+    }
+
+    @Test
     void createClient_savesClientWhenNoDuplicatesFound() {
         ClientDto dto = new ClientDto();
         dto.setFirstName("Иван");

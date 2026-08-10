@@ -22,17 +22,18 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     );
     
     @Query("SELECT c FROM Client c WHERE " +
-       "(:firstName IS NULL OR LOWER(c.firstName) LIKE LOWER(CONCAT('%', :firstName, '%'))) AND " +
-       "(:lastName IS NULL OR LOWER(c.lastName) LIKE LOWER(CONCAT('%', :lastName, '%'))) AND " +
-       "(:middleName IS NULL OR LOWER(c.middleName) LIKE LOWER(CONCAT('%', :middleName, '%'))) AND " +
+       "(:firstNameLike IS NULL OR LOWER(c.firstName) LIKE :firstNameLike) AND " +
+       "(:lastNameLike IS NULL OR LOWER(c.lastName) LIKE :lastNameLike) AND " +
+       "(:middleNameLike IS NULL OR LOWER(c.middleName) LIKE :middleNameLike) AND " +
        "(:passport IS NULL OR c.passport = :passport) AND " +
-       "(:phone IS NULL OR c.phone = :phone OR c.phone = CONCAT('+', :phone))")
+       "(:phone IS NULL OR c.phone = :phone OR c.phone = :phonePlus)")
     Page<Client> findClientsByFilters(
-            @Param("firstName") String firstName,
-            @Param("lastName") String lastName,
-            @Param("middleName") String middleName,
+            @Param("firstNameLike") String firstNameLike,
+            @Param("lastNameLike") String lastNameLike,
+            @Param("middleNameLike") String middleNameLike,
             @Param("passport") String passport,
             @Param("phone") String phone,
+            @Param("phonePlus") String phonePlus,
             Pageable pageable
     );
 }
