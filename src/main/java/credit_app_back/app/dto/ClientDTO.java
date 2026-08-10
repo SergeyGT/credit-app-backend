@@ -1,7 +1,4 @@
-
 package credit_app_back.app.dto;
-
-import java.time.LocalDate;
 
 import credit_app_back.app.entity.FamilyStatus;
 import credit_app_back.app.entity.Gender;
@@ -14,48 +11,50 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
 public class ClientDto {
-    @NotBlank
+
+    @NotBlank(message = "First name is required")
     @Size(min = 1, max = 64)
-    @Pattern(regexp = "^[A-Za-z][a-z]*(?:[\\s'-][A-Za-z][a-z]*)*$", message = "Invalid first name format")
+    @Pattern(regexp = "^[\\p{L}\\s'-]+$", message = "Invalid first name format")
     private String firstName;
 
-    @NotBlank
+    @NotBlank(message = "Last name is required")
     @Size(min = 1, max = 64)
-    @Pattern(regexp = "^[A-Za-z][a-z]*(?:[\\s'-][A-Za-z][a-z]*)*$", message = "Invalid last name format")
+    @Pattern(regexp = "^[\\p{L}\\s'-]+$", message = "Invalid last name format")
     private String lastName;
 
-    @Size(min = 1, max = 64)
-    @Pattern(regexp = "^[A-Za-z][a-z]*(?:[\\s'-][A-Za-z][a-z]*)*$", message = "Invalid middle name format")
+    @Size(max = 64)
+    @Pattern(regexp = "^[\\p{L}\\s'-]+$", message = "Invalid middle name format")
     private String middleName;
 
-    @NotBlank
-    @Pattern(regexp = "^[0-9]{10}$", message = "Invalid passport format")
+    @NotBlank(message = "Passport is required")
     @Size(min = 10, max = 10)
-    public String passport;
+    @Pattern(regexp = "^\\d{10}$", message = "Invalid passport format")
+    private String passport;
 
-    @NotNull
+    @NotNull(message = "Gender is required")
     private Gender gender;
 
-    @NotNull
-    public FamilyStatus familyStatus;
+    @NotNull(message = "Family status is required")
+    private FamilyStatus familyStatus;
 
-    @NotBlank
+    @NotBlank(message = "Residence address is required")
     @Size(max = 255)
     private String residenceAddress;
 
-    @NotBlank
+    @NotBlank(message = "Registration address is required")
     @Size(max = 255)
     private String registrationAddress;
 
-    @NotBlank
-    @Pattern(regexp = "^\\+?[0-9]{10,12}$", message = "Invalid phone number format")
-    @Size(min = 11, max = 12)
-    public String phoneNumber;
+    @NotBlank(message = "Phone number is required")
+    @Pattern(regexp = "^\\+?\\d{10,12}$", message = "Invalid phone format")
+    private String phone;
 
     private LocalDate employmentStartDate;
     private LocalDate employmentEndDate;
@@ -66,7 +65,7 @@ public class ClientDto {
     @Size(max = 255)
     private String organizationName;
 
-    @NotBlank
+    @NotBlank(message = "Loan purpose is required")
     @Size(max = 255)
     private String loanPurpose;
 }

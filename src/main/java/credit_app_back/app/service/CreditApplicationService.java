@@ -97,7 +97,7 @@ public class CreditApplicationService {
 
         if (!client.getFirstName().equals(clientDto.getFirstName()) ||
             !client.getLastName().equals(clientDto.getLastName()) ||
-            !client.getPhone().equals(clientDto.getPhoneNumber())) {
+            !client.getPhone().equals(clientDto.getPhone())) {
             log.warn("Client data mismatch for passport: {}", client.getPassport());
             throw new MismatchClientDataException();
         }

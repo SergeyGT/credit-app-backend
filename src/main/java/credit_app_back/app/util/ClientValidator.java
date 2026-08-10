@@ -89,7 +89,7 @@ public class ClientValidator {
         validatePartOfName("lastName", dto.getLastName(), exceptions);
         validatePartOfName("middleName", dto.getMiddleName(), exceptions);
         validatePassport(dto.getPassport(), exceptions);
-        validatePhone(dto.getPhoneNumber(), exceptions);
+        validatePhone(dto.getPhone(), exceptions);
         validateEmploymentData(dto, exceptions);
         validateAddresses(dto, exceptions);
         validateGender(dto, exceptions);

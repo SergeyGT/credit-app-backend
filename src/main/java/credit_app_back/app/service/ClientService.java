@@ -120,7 +120,7 @@ public class ClientService {
             throw new MismatchClientDataException();
         }
 
-        if (clientRepository.findByPhone(dto.getPhoneNumber()).isPresent()) {
+        if (clientRepository.findByPhone(dto.getPhone()).isPresent()) {
             throw new MismatchClientDataException();
         }
 
@@ -149,7 +149,7 @@ public class ClientService {
             // 3. Проверка: совпадают ли данные?
             if (!client.getFirstName().equals(dto.getFirstName()) ||
                 !client.getLastName().equals(dto.getLastName()) ||
-                !client.getPhone().equals(dto.getPhoneNumber())) {
+                !client.getPhone().equals(dto.getPhone())) {
                 log.warn("Client data mismatch for passport: {}", dto.getPassport());
                 throw new MismatchClientDataException();
             }
