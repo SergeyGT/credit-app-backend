@@ -10,6 +10,18 @@ import credit_app_back.app.exception.logic.ApplicationNotFoundException;
 import credit_app_back.app.mapper.ClientMapper;
 import credit_app_back.app.repository.ClientRepository;
 import credit_app_back.app.util.ClientValidator;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import lombok.RequiredArgsConstructor;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +30,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,6 +44,7 @@ public class ClientService {
     private final ClientRepository clientRepository;
     private final ClientMapper clientMapper;
     private final ClientValidator clientValidator;
+    private final EntityManager entityManager;
 
     @Value("${app.client.page-size:10}")
     private int pageSize;
@@ -69,25 +83,73 @@ public class ClientService {
         }
 
         PageRequest pageRequest = PageRequest.of(page, pageSize);
-        Page<Client> clientPage = clientRepository.findClientsByFilters(
-                filters.getFirstName(),
-                filters.getLastName(),
-                filters.getMiddleName(),
-                filters.getPassport(),
-                filters.getPhone(),
-                pageRequest
-        );
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
-        List<ClientDto> clientDtos = clientPage.getContent().stream()
+        CriteriaQuery<Client> selectQuery = cb.createQuery(Client.class);
+        Root<Client> root = selectQuery.from(Client.class);
+        List<Predicate> predicates = buildClientPredicates(cb, root, filters);
+        selectQuery.select(root).where(predicates.toArray(new Predicate[0]));
+
+        TypedQuery<Client> typedQuery = entityManager.createQuery(selectQuery);
+        typedQuery.setFirstResult(pageRequest.getPageNumber() * pageRequest.getPageSize());
+        typedQuery.setMaxResults(pageRequest.getPageSize());
+        List<Client> clients = typedQuery.getResultList();
+
+        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+        Root<Client> countRoot = countQuery.from(Client.class);
+        countQuery.select(cb.count(countRoot))
+                .where(buildClientPredicates(cb, countRoot, filters).toArray(new Predicate[0]));
+        long total = entityManager.createQuery(countQuery).getSingleResult();
+
+        List<ClientDto> clientDtos = clients.stream()
                 .map(clientMapper::toDto)
                 .collect(Collectors.toList());
 
         return new PageResponseDto<>(
-                clientPage.getNumber(),
-                clientPage.getSize(),
-                clientPage.getTotalElements(),
+                pageRequest.getPageNumber(),
+                pageRequest.getPageSize(),
+                total,
                 clientDtos
         );
+    }
+
+    private List<Predicate> buildClientPredicates(
+            CriteriaBuilder cb,
+            Root<Client> root,
+            FindClientsDto filters
+    ) {
+        List<Predicate> predicates = new ArrayList<>();
+
+        if (filters.getFirstName() != null) {
+            predicates.add(cb.like(
+                    cb.lower(root.get("firstName")),
+                    "%" + filters.getFirstName().toLowerCase() + "%"
+            ));
+        }
+
+        if (filters.getLastName() != null) {
+            predicates.add(cb.like(
+                    cb.lower(root.get("lastName")),
+                    "%" + filters.getLastName().toLowerCase() + "%"
+            ));
+        }
+
+        if (filters.getMiddleName() != null) {
+            predicates.add(cb.like(
+                    cb.lower(root.get("middleName")),
+                    "%" + filters.getMiddleName().toLowerCase() + "%"
+            ));
+        }
+
+        if (filters.getPassport() != null) {
+            predicates.add(cb.equal(root.get("passport"), filters.getPassport()));
+        }
+
+        if (filters.getPhone() != null) {
+            predicates.add(cb.equal(root.get("phone"), filters.getPhone()));
+        }
+
+        return predicates;
     }
 
     public Client getClientById(Long id) {

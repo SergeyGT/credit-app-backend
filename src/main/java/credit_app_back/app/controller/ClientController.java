@@ -7,6 +7,7 @@ import credit_app_back.app.entity.Client;
 import credit_app_back.app.mapper.ClientMapper;
 import credit_app_back.app.service.ClientService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -24,7 +25,7 @@ public class ClientController {
 
     @GetMapping
     public ResponseEntity<PageResponseDto<ClientDto>> getAllClients(
-            @RequestParam(defaultValue = "0") int page  
+            @RequestParam(defaultValue = "0") @PositiveOrZero int page  
     ) {
         log.debug("GET /api/clients, page: {}", page);
         PageResponseDto<ClientDto> response = clientService.getAllClients(page);
@@ -33,7 +34,7 @@ public class ClientController {
 
     @GetMapping("/find")
     public ResponseEntity<PageResponseDto<ClientDto>> findClients(
-            @RequestParam(defaultValue = "0") int page,  
+            @RequestParam(defaultValue = "0") @PositiveOrZero int page,  
             @RequestParam(required = false) String phone,
             @RequestParam(required = false) String passport,
             @RequestParam(required = false) String firstName,
