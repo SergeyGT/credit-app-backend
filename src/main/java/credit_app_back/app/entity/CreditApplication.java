@@ -40,6 +40,12 @@ public class CreditApplication {
     @Column(name = "approved_money", precision = 12, scale = 2)
     private BigDecimal approvedMoney;
 
+    @Column(name = "loan_purpose", length = 255)
+    private String loanPurpose; 
+
+    @Column(name = "decision_date")
+    private LocalDateTime decisionDate;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -47,4 +53,7 @@ public class CreditApplication {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @OneToOne(mappedBy = "creditApplication", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private CreditAgreement creditAgreement;
 }

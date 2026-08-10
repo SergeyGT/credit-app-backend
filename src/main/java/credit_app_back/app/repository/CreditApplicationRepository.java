@@ -6,6 +6,8 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import credit_app_back.app.entity.CreditApplication;
@@ -20,7 +22,8 @@ public interface CreditApplicationRepository extends JpaRepository<CreditApplica
     default List<CreditApplication> findApproved() {
         return findByStatus(CreditApplicationStatus.APPROVED);
     }
-    List<CreditApplication> findByClientIdAndStatus(Long clientId, CreditApplicationStatus status);
+    Page<CreditApplication> findByStatus(CreditApplicationStatus status, Pageable pageable);
+
     @Query("SELECT a FROM CreditApplication a WHERE " +
            "(:status IS NULL OR a.status = :status) AND " +
            "(:clientId IS NULL OR a.client.id = :clientId)")
