@@ -57,10 +57,11 @@ public class CreditAgreementService {
                 .orElseThrow(() -> new AgreementNotFoundException(applicationId));
     }
 
-    public CreditAgreement getAgreementById(Long id) {
+     public CreditAgreementDto getAgreementById(Long id) {
         log.debug("Getting agreement by id: {}", id);
-        return creditAgreementRepository.findById(id)
+        CreditAgreement agreement = creditAgreementRepository.findById(id)
                 .orElseThrow(() -> new AgreementNotFoundException(id));
+        return creditAgreementMapper.toDto(agreement); 
     }
 
     public PageResponseDto<CreditAgreementDto> getAllAgreements(int page) {
