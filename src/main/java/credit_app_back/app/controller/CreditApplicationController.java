@@ -7,7 +7,7 @@ import credit_app_back.app.dto.PageResponseDto;
 import credit_app_back.app.entity.CreditApplicationStatus;
 import credit_app_back.app.service.CreditApplicationService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -42,7 +42,7 @@ public class CreditApplicationController {
 
     @GetMapping("/approved")
     public ResponseEntity<PageResponseDto<CreditApplicationDto>> getApprovedApplications(
-            @RequestParam(defaultValue = "0") @Positive int page
+            @RequestParam(defaultValue = "0") @PositiveOrZero int page
     ) {
         log.debug("GET /api/applications/approved, page: {}", page);
         PageResponseDto<CreditApplicationDto> response = creditApplicationService.getApprovedApplications(page);
@@ -51,7 +51,7 @@ public class CreditApplicationController {
 
     @GetMapping
     public ResponseEntity<PageResponseDto<CreditApplicationDto>> getAllApplications(
-            @RequestParam(defaultValue = "0") @Positive int page
+            @RequestParam(defaultValue = "0") @PositiveOrZero int page
     ) {
         log.debug("GET /api/applications, page: {}", page);
         PageResponseDto<CreditApplicationDto> response = creditApplicationService.getAllApplications(page);
@@ -70,7 +70,7 @@ public class CreditApplicationController {
     @GetMapping("/status")
     public ResponseEntity<PageResponseDto<CreditApplicationDto>> getApplicationsByStatus(
             @RequestParam CreditApplicationStatus status,
-            @RequestParam(defaultValue = "0") @Positive int page
+            @RequestParam(defaultValue = "0") @PositiveOrZero int page
     ) {
         log.debug("GET /api/applications/status, status: {}, page: {}", status, page);
         PageResponseDto<CreditApplicationDto> response = 

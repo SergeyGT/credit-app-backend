@@ -5,7 +5,7 @@ import credit_app_back.app.dto.CreditAgreementDto;
 import credit_app_back.app.dto.PageResponseDto;
 import credit_app_back.app.entity.CreditAgreeStatus;
 import credit_app_back.app.service.CreditAgreementService;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +21,7 @@ public class CreditAgreementController {
 
     @GetMapping("/signed")
     public ResponseEntity<PageResponseDto<CreditAgreementDto>> getSignedAgreements(
-            @RequestParam(defaultValue = "0") @Positive int page
+            @RequestParam(defaultValue = "0") @PositiveOrZero int page
     ) {
         log.debug("GET /api/agreements/signed, page: {}", page);
         PageResponseDto<CreditAgreementDto> response = 
@@ -31,7 +31,7 @@ public class CreditAgreementController {
 
     @GetMapping
     public ResponseEntity<PageResponseDto<CreditAgreementDto>> getAllAgreements(
-            @RequestParam(defaultValue = "0") @Positive int page
+            @RequestParam(defaultValue = "0") @PositiveOrZero int page
     ) {
         log.debug("GET /api/agreements, page: {}", page);
         PageResponseDto<CreditAgreementDto> response = 
@@ -51,7 +51,7 @@ public class CreditAgreementController {
     @GetMapping("/status")
     public ResponseEntity<PageResponseDto<CreditAgreementDto>> getAgreementsByStatus(
             @RequestParam CreditAgreeStatus status,
-            @RequestParam(defaultValue = "0") @Positive int page
+            @RequestParam(defaultValue = "0") @PositiveOrZero int page
     ) {
         log.debug("GET /api/agreements/status, status: {}, page: {}", status, page);
         PageResponseDto<CreditAgreementDto> response = 
