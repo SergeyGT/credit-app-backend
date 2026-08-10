@@ -30,10 +30,8 @@ public class ClientValidator {
     ) {
         List<ValidationException> exceptions = new ArrayList<>();
 
-        // Валидация данных клиента
         validateClientData(dto.getClient(), exceptions);
 
-        // Валидация суммы кредита
         validateLoanAmount(dto.getDesiredLoanAmount(), exceptions);
 
         if (exceptions.isEmpty()) {
