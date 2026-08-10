@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class FindClientsDto {
+public class FindClientsDto implements Filterable {
 
     private String firstName;
     private String lastName;
