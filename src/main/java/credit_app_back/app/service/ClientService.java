@@ -37,14 +37,15 @@ public class ClientService {
 
     public PageResponseDto<ClientDto> getAllClients(int page) {
         log.debug("Getting all clients, page: {}", page);
-
-        Pageable pageable = Pageable.of(page, pageSize);
+        
+        int safePage = Math.max(page, 0);
+        Pageable pageable = Pageable.of(safePage, pageSize);
         Page<Client> clientPage = clientRepository.findAll(pageable);
-
+        
         List<ClientDto> clientDtos = clientPage.getContent().stream()
                 .map(clientMapper::toDto)
                 .collect(Collectors.toList());
-
+        
         return new PageResponseDto<>(
                 clientPage.getPage(),
                 clientPage.getPageSize(),

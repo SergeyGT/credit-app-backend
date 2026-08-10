@@ -77,8 +77,16 @@ public abstract class CRUDRepository<E, ID extends Serializable> {
     public Page<E> findAllBy(Pageable pageable, BiFunction<CriteriaBuilder, Root<E>, Predicate[]> predicateBuilder) {
         long total = countBy(predicateBuilder);
         int pageSize = pageable.getSize();
+        
+        if (total == 0) {
+            return Page.empty();
+        }
+        
         int maxPage = (int) Math.ceil((double) total / pageSize);
         int currentPage = Math.min(pageable.getPage(), Math.max(maxPage, 1));
+        
+        currentPage = Math.max(currentPage, 1);
+        
         int offset = (currentPage - 1) * pageSize;
 
         List<E> content = getQueryFindAllBy(predicateBuilder)
