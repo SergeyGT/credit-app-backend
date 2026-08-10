@@ -14,12 +14,12 @@ import credit_app_back.app.mapper.CreditApplicationMapper;
 import credit_app_back.app.repository.ClientRepository;
 import credit_app_back.app.repository.CreditApplicationRepository;
 import credit_app_back.app.repository.CreditAgreementRepository;
+import credit_app_back.app.repository.Page;
+import credit_app_back.app.repository.Pageable;
 import credit_app_back.app.util.ClientValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,13 +38,10 @@ import static credit_app_back.app.entity.CreditApplicationStatus.APPROVED;
 public class CreditApplicationService {
 
     private final ClientValidator clientValidator;
-
     private final ClientMapper clientMapper;
     private final CreditApplicationMapper creditApplicationMapper;
     private final CreditAgreementMapper creditAgreementMapper;
-
     private final ICreditAnalyticService analyticService;
-
     private final ClientRepository clientRepository;
     private final CreditApplicationRepository creditApplicationRepository;
     private final CreditAgreementRepository creditAgreementRepository;
@@ -56,7 +53,6 @@ public class CreditApplicationService {
     public CreditApplicationDto createCreditApplication(CreateCreditApplicationRequestDto request) {
         log.debug("Creating credit application: {}", request);
 
-        // 1. Валидация DTO
         Optional<GroupValidationException> validationExceptions =
                 clientValidator.validateCreateCreditApplicationRequest(request);
         if (validationExceptions.isPresent()) {
@@ -65,7 +61,6 @@ public class CreditApplicationService {
 
         ClientDto clientData = request.getClient();
         Client client = getOrCreateClient(clientData);
-
         checkClientData(client, clientData);
 
         CreditApplication creditApplication = CreditApplication.builder()
@@ -79,41 +74,24 @@ public class CreditApplicationService {
     }
 
     private Client getOrCreateClient(ClientDto clientData) {
-        log.debug("Getting or creating client with passport: {}", clientData.getPassport());
-
         Optional<Client> optionalClient = clientRepository.findByPassport(clientData.getPassport());
-
-        if (optionalClient.isPresent()) {
-            log.debug("Client found with passport: {}", clientData.getPassport());
-            return optionalClient.get();
-        }
-
-        log.debug("Client not found, creating new client with passport: {}", clientData.getPassport());
-        return clientRepository.save(clientMapper.toClient(clientData));
+        return optionalClient.orElseGet(() -> clientRepository.save(clientMapper.toClient(clientData)));
     }
 
-    private void checkClientData(Client client, ClientDto ClientDto) {
-        log.debug("Checking client data for passport: {}", client.getPassport());
-
-        if (!client.getFirstName().equals(ClientDto.getFirstName()) ||
-            !client.getLastName().equals(ClientDto.getLastName()) ||
-            !client.getPhone().equals(ClientDto.getPhone())) {
-            log.warn("Client data mismatch for passport: {}", client.getPassport());
+    private void checkClientData(Client client, ClientDto clientDto) {
+        if (!client.getFirstName().equals(clientDto.getFirstName()) ||
+            !client.getLastName().equals(clientDto.getLastName()) ||
+            !client.getPhone().equals(clientDto.getPhone())) {
             throw new MismatchClientDataException();
         }
     }
 
     private CreditApplicationDto processApplication(CreditApplication application) {
         CreditApplication savedApplication = creditApplicationRepository.save(application);
-        log.debug("Application saved with id: {}", savedApplication.getId());
-
         analyticService.processCreditApplication(savedApplication.getId());
 
         CreditApplication processedApplication = creditApplicationRepository.findById(savedApplication.getId())
                 .orElseThrow(() -> new ApplicationNotFoundException(savedApplication.getId()));
-
-        log.info("Application {} processed with status: {}", 
-                processedApplication.getId(), processedApplication.getStatus());
 
         return creditApplicationMapper.toDto(processedApplication);
     }
@@ -127,41 +105,32 @@ public class CreditApplicationService {
 
         checkIfCanSign(application);
 
-        // 3. Подписываем договор
         CreditAgreement agreement = application.getCreditAgreement();
-
         if (agreement == null) {
-            log.warn("Agreement not found for application: {}", applicationId);
             throw new AgreementNotFoundException(applicationId);
         }
 
         agreement.setSignStatus(SIGNED);
         agreement.setSignDate(LocalDate.now());
-
         application.setStatus(CreditApplicationStatus.SIGNED);
 
         creditAgreementRepository.save(agreement);
         creditApplicationRepository.save(application);
-
-        log.info("Agreement signed for application: {}", applicationId);
 
         return creditAgreementMapper.toDto(agreement);
     }
 
     private void checkIfCanSign(CreditApplication application) {
         if (application.getStatus() != APPROVED) {
-            log.warn("Application {} is not approved, status: {}", application.getId(), application.getStatus());
             throw new ApplicationCanNotSignException(application.getId(), application.getStatus());
         }
 
         CreditAgreement agreement = application.getCreditAgreement();
         if (agreement == null) {
-            log.warn("Agreement not found for application: {}", application.getId());
             throw new AgreementNotFoundException(application.getId());
         }
 
         if (agreement.getSignStatus() == SIGNED) {
-            log.warn("Agreement already signed for application: {}", application.getId());
             throw new AgreementAlreadySignedException(application.getId());
         }
     }
@@ -169,18 +138,18 @@ public class CreditApplicationService {
     public PageResponseDto<CreditApplicationDto> getApprovedApplications(int page) {
         log.debug("Getting approved applications, page: {}", page);
 
-        PageRequest pageRequest = PageRequest.of(page, pageSize);
+        Pageable pageable = Pageable.of(page, pageSize);
         Page<CreditApplication> applicationPage =
-                creditApplicationRepository.findByStatus(CreditApplicationStatus.APPROVED, pageRequest);
+                creditApplicationRepository.findByStatus(CreditApplicationStatus.APPROVED, pageable);
 
         List<CreditApplicationDto> applicationDtos = applicationPage.getContent().stream()
                 .map(creditApplicationMapper::toDto)
                 .collect(Collectors.toList());
 
         return new PageResponseDto<>(
-                applicationPage.getNumber(),
-                applicationPage.getSize(),
-                applicationPage.getTotalElements(),
+                applicationPage.getPage(),
+                applicationPage.getPageSize(),
+                applicationPage.getTotal(),
                 applicationDtos
         );
     }
@@ -195,17 +164,17 @@ public class CreditApplicationService {
     public PageResponseDto<CreditApplicationDto> getAllApplications(int page) {
         log.debug("Getting all applications, page: {}", page);
 
-        PageRequest pageRequest = PageRequest.of(page, pageSize);
-        Page<CreditApplication> applicationPage = creditApplicationRepository.findAll(pageRequest);
+        Pageable pageable = Pageable.of(page, pageSize);
+        Page<CreditApplication> applicationPage = creditApplicationRepository.findAll(pageable);
 
         List<CreditApplicationDto> applicationDtos = applicationPage.getContent().stream()
                 .map(creditApplicationMapper::toDto)
                 .collect(Collectors.toList());
 
         return new PageResponseDto<>(
-                applicationPage.getNumber(),
-                applicationPage.getSize(),
-                applicationPage.getTotalElements(),
+                applicationPage.getPage(),
+                applicationPage.getPageSize(),
+                applicationPage.getTotal(),
                 applicationDtos
         );
     }
@@ -213,13 +182,13 @@ public class CreditApplicationService {
     public PageResponseDto<CreditApplicationDto> getApplicationsByStatus(int page, CreditApplicationStatus status) {
         log.debug("Getting applications by status: {}, page: {}", status, page);
 
-        PageRequest pageRequest = PageRequest.of(page, pageSize);
+        Pageable pageable = Pageable.of(page, pageSize);
         Page<CreditApplication> applicationPage;
 
         if (status == null) {
-            applicationPage = creditApplicationRepository.findAll(pageRequest);
+            applicationPage = creditApplicationRepository.findAll(pageable);
         } else {
-            applicationPage = creditApplicationRepository.findByStatus(status, pageRequest);
+            applicationPage = creditApplicationRepository.findByStatus(status, pageable);
         }
 
         List<CreditApplicationDto> applicationDtos = applicationPage.getContent().stream()
@@ -227,9 +196,9 @@ public class CreditApplicationService {
                 .collect(Collectors.toList());
 
         return new PageResponseDto<>(
-                applicationPage.getNumber(),
-                applicationPage.getSize(),
-                applicationPage.getTotalElements(),
+                applicationPage.getPage(),
+                applicationPage.getPageSize(),
+                applicationPage.getTotal(),
                 applicationDtos
         );
     }

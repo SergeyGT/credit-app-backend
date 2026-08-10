@@ -1,35 +1,53 @@
 package credit_app_back.app.repository;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Repository;
-
 import credit_app_back.app.entity.CreditApplication;
 import credit_app_back.app.entity.CreditApplicationStatus;
+import jakarta.persistence.criteria.Predicate;
+import org.hibernate.SessionFactory;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Repository
-public interface CreditApplicationRepository extends JpaRepository<CreditApplication, Long> {
-    Optional<CreditApplication> findById(Long id);
-    List<CreditApplication> findAll();
-    List<CreditApplication> findByStatus(CreditApplicationStatus status);
-    
-    default List<CreditApplication> findApproved() {
-        return findByStatus(CreditApplicationStatus.APPROVED);
-    }
-    Page<CreditApplication> findByStatus(CreditApplicationStatus status, Pageable pageable);
+public class CreditApplicationRepository extends CRUDRepository<CreditApplication, Long> {
 
-    @Query("SELECT a FROM CreditApplication a WHERE " +
-           "(:status IS NULL OR a.status = :status) AND " +
-           "(:clientId IS NULL OR a.client.id = :clientId)")
-    Page<CreditApplication> findApplicationsByFilters(
-            @Param("status") CreditApplicationStatus status,
-            @Param("clientId") Long clientId,
+    public CreditApplicationRepository(SessionFactory sessionFactory) {
+        super(CreditApplication.class, sessionFactory);
+    }
+
+    @Transactional
+    public Optional<CreditApplication> findById(Long id) {
+        return super.findById(id);
+    }
+
+    @Transactional
+    public Page<CreditApplication> findByStatus(CreditApplicationStatus status, Pageable pageable) {
+        return findAllBy(pageable, (builder, root) ->
+                new Predicate[]{builder.equal(root.get("status"), status)}
+        );
+    }
+
+    @Transactional
+    public Page<CreditApplication> findApplicationsByFilters(
+            CreditApplicationStatus status,
+            Long clientId,
             Pageable pageable
-    );
+    ) {
+        return findAllBy(pageable, (builder, root) -> {
+            Predicate[] predicates = new Predicate[2];
+            int index = 0;
+
+            if (status != null) {
+                predicates[index++] = builder.equal(root.get("status"), status);
+            }
+            if (clientId != null) {
+                predicates[index++] = builder.equal(root.get("client").get("id"), clientId);
+            }
+
+            Predicate[] finalPredicates = new Predicate[index];
+            System.arraycopy(predicates, 0, finalPredicates, 0, index);
+            return finalPredicates;
+        });
+    }
 }
