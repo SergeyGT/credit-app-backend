@@ -92,12 +92,12 @@ public class CreditApplicationService {
         return clientRepository.save(clientMapper.toClient(clientData));
     }
 
-    private void checkClientData(Client client, ClientDto clientDto) {
+    private void checkClientData(Client client, ClientDto ClientDto) {
         log.debug("Checking client data for passport: {}", client.getPassport());
 
-        if (!client.getFirstName().equals(clientDto.getFirstName()) ||
-            !client.getLastName().equals(clientDto.getLastName()) ||
-            !client.getPhone().equals(clientDto.getPhone())) {
+        if (!client.getFirstName().equals(ClientDto.getFirstName()) ||
+            !client.getLastName().equals(ClientDto.getLastName()) ||
+            !client.getPhone().equals(ClientDto.getPhone())) {
             log.warn("Client data mismatch for passport: {}", client.getPassport());
             throw new MismatchClientDataException();
         }

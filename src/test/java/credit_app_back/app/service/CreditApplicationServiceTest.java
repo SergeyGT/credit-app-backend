@@ -73,35 +73,35 @@ class CreditApplicationServiceTest {
 
     @Test
     void createCreditApplication_existingClient_returnsDto() {
-        ClientDto clientDto = new ClientDto();
-        clientDto.setFirstName("Иван");
-        clientDto.setLastName("Петров");
-        clientDto.setPhone("+79995554433");
-        clientDto.setPassport("9876543210");
-        clientDto.setLoanPurpose("Покупка автомобиля");
+        ClientDto ClientDto = new ClientDto();
+        ClientDto.setFirstName("Иван");
+        ClientDto.setLastName("Петров");
+        ClientDto.setPhone("+79995554433");
+        ClientDto.setPassport("9876543210");
+        ClientDto.setLoanPurpose("Покупка автомобиля");
 
         CreateCreditApplicationRequestDto request = new CreateCreditApplicationRequestDto();
-        request.setClient(clientDto);
+        request.setClient(ClientDto);
         request.setDesiredLoanAmount(BigDecimal.valueOf(150000));
 
         Client existingClient = new Client();
         existingClient.setId(1L);
-        existingClient.setFirstName(clientDto.getFirstName());
-        existingClient.setLastName(clientDto.getLastName());
-        existingClient.setPhone(clientDto.getPhone());
-        existingClient.setPassport(clientDto.getPassport());
+        existingClient.setFirstName(ClientDto.getFirstName());
+        existingClient.setLastName(ClientDto.getLastName());
+        existingClient.setPhone(ClientDto.getPhone());
+        existingClient.setPassport(ClientDto.getPassport());
 
         CreditApplication savedApplication = new CreditApplication();
         savedApplication.setId(1L);
         savedApplication.setClient(existingClient);
         savedApplication.setStatus(CreditApplicationStatus.PENDING);
         savedApplication.setRequestedMoney(request.getDesiredLoanAmount());
-        savedApplication.setLoanPurpose(clientDto.getLoanPurpose());
+        savedApplication.setLoanPurpose(ClientDto.getLoanPurpose());
 
         CreditApplicationDto expectedDto = new CreditApplicationDto();
 
         when(clientValidator.validateCreateCreditApplicationRequest(request)).thenReturn(Optional.empty());
-        when(clientRepository.findByPassport(clientDto.getPassport())).thenReturn(Optional.of(existingClient));
+        when(clientRepository.findByPassport(ClientDto.getPassport())).thenReturn(Optional.of(existingClient));
         when(creditApplicationRepository.save(any(CreditApplication.class))).thenReturn(savedApplication);
         when(creditApplicationRepository.findById(1L)).thenReturn(Optional.of(savedApplication));
         when(creditApplicationMapper.toDto(savedApplication)).thenReturn(expectedDto);

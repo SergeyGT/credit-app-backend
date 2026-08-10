@@ -8,5 +8,5 @@ import credit_app_back.app.entity.Client;
 @Mapper(componentModel = "spring")
 public interface ClientMapper {
     ClientDto toDto(Client client);
-    Client toClient(ClientDto clientDto);
+    Client toClient(ClientDto ClientDto);
 }

@@ -36,10 +36,6 @@ public class ClientValidator {
         return Optional.of(new GroupValidationException(exceptions));
     }
 
-    /**
-     * Валидация DTO для поиска клиентов
-     * Проверяем ТОЛЬКО те поля, которые переданы
-     */
     public Optional<GroupValidationException> validateFindClientsDto(FindClientsDto dto) {
         List<ValidationException> exceptions = new ArrayList<>();
 
@@ -86,7 +82,6 @@ public class ClientValidator {
         return Optional.of(new GroupValidationException(exceptions));
     }
 
-    // ===== ПРИВАТНЫЕ МЕТОДЫ ВАЛИДАЦИИ =====
 
     private void validateClientData(ClientDto dto, List<ValidationException> exceptions) {
         validatePartOfName("firstName", dto.getFirstName(), exceptions);

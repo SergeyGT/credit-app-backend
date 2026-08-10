@@ -20,8 +20,8 @@ public class CreditAgreementMapper {
                         entity.getCreditApplication().getClient().getFirstName() + " " +
                         entity.getCreditApplication().getClient().getLastName()
                 )
-                .loanAmount(entity.getCreditApplication().getApprovedMoney())  // ← берем из заявки
-                .termDays(entity.getCreditApplication().getApprovedTerm())     // ← берем из заявки
+                .loanAmount(entity.getCreditApplication().getApprovedMoney())  
+                .termDays(entity.getCreditApplication().getApprovedTerm())   
                 .signDate(entity.getSignDate())
                 .signStatus(entity.getSignStatus())
                 .build();

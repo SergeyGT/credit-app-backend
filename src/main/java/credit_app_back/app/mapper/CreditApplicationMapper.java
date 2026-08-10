@@ -13,20 +13,20 @@ public class CreditApplicationMapper {
         }
 
         return CreditApplicationDto.builder()
-                .applicationId(entity.getId())                    // ← ID заявки
-                .clientId(entity.getClient().getId())             // ← ID клиента
-                .clientFullName(                                  // ← ФИО клиента
+                .applicationId(entity.getId())                    
+                .clientId(entity.getClient().getId())             
+                .clientFullName(                                  
                         entity.getClient().getFirstName() + " " +
                         entity.getClient().getLastName()
                 )
-                .status(entity.getStatus())                       // ← Статус
-                .requestedMoney(entity.getRequestedMoney())       // ← Запрошенная сумма
-                .approvedMoney(entity.getApprovedMoney())         // ← Одобренная сумма
-                .approvedTerm(entity.getApprovedTerm())           // ← Срок
-                .loanPurpose(entity.getLoanPurpose())             // ← Цель кредита
-                .createdAt(entity.getCreatedAt())                 // ← Дата создания
-                .decisionDate(entity.getDecisionDate())           // ← Дата решения
-                .updatedAt(entity.getUpdatedAt())                 // ← Дата обновления
+                .status(entity.getStatus())                       
+                .requestedMoney(entity.getRequestedMoney())       
+                .approvedMoney(entity.getApprovedMoney())         
+                .approvedTerm(entity.getApprovedTerm())           
+                .loanPurpose(entity.getLoanPurpose())             
+                .createdAt(entity.getCreatedAt())                 
+                .decisionDate(entity.getDecisionDate())           
+                .updatedAt(entity.getUpdatedAt())                 
                 .build();
     }
 }
