@@ -1,3 +1,18 @@
 databaseChangeLog:
-  - include:
-      file: db/changelog/changeset/init_tables_v1.sql
+  - changeSet:
+      id: 001-create-tables
+      author: sergey
+      changes:
+        - sqlFile:
+            path: db/changelog/changeset/init_tables_v1.sql
+            splitStatements: true
+            stripComments: true
+
+  - changeSet:
+      id: 002-add-loan-purpose-and-decision-date
+      author: sergey
+      changes:
+        - sqlFile:
+            path: db/changelog/changeset/002-add-loan-purpose-and-decision-date.sql
+            splitStatements: true
+            stripComments: true
