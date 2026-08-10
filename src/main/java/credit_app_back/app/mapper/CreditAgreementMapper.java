@@ -1,15 +1,29 @@
 package credit_app_back.app.mapper;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-
 import credit_app_back.app.dto.CreditAgreementDto;
 import credit_app_back.app.entity.CreditAgreement;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring")
-public interface CreditAgreementMapper {
+@Component
+public class CreditAgreementMapper {
 
-    @Mapping(target = "applicationId", source = "creditApplication.id")
-    CreditAgreementDto toDto(CreditAgreement agreement);
+    public CreditAgreementDto toDto(CreditAgreement entity) {
+        if (entity == null) {
+            return null;
+        }
 
+        return CreditAgreementDto.builder()
+                .id(entity.getId())
+                .applicationId(entity.getCreditApplication().getId())
+                .clientId(entity.getCreditApplication().getClient().getId())
+                .clientFullName(
+                        entity.getCreditApplication().getClient().getFirstName() + " " +
+                        entity.getCreditApplication().getClient().getLastName()
+                )
+                .loanAmount(entity.getCreditApplication().getApprovedMoney())  // ← берем из заявки
+                .termDays(entity.getCreditApplication().getApprovedTerm())     // ← берем из заявки
+                .signDate(entity.getSignDate())
+                .signStatus(entity.getSignStatus())
+                .build();
+    }
 }
