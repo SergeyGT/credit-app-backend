@@ -103,8 +103,9 @@ public class RandomAnalyticService implements ICreditAnalyticService {
                 .signDate(null)
                 .build();
 
-        CreditAgreement createdAgreement = creditAgreementRepository.save(agreement);
-        log.info("Agreement created with id: {} for application: {}",
-                createdAgreement.getId(), application.getId());
+        application.setCreditAgreement(agreement);
+        creditApplicationRepository.save(application);
+
+        log.info("Agreement created for application: {}", application.getId());
     }
 }

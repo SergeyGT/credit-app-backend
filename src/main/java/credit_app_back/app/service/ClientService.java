@@ -131,11 +131,21 @@ public class ClientService {
             throw validationResult.get();
         }
 
-        if (clientRepository.findByPassport(dto.getPassport()).isPresent()) {
+        Optional<Client> existingByPassport = clientRepository.findByPassport(dto.getPassport());
+        if (existingByPassport.isPresent()) {
+            Client existingClient = existingByPassport.get();
+            if (isSameClientData(existingClient, dto)) {
+                return existingClient;
+            }
             throw new MismatchClientDataException();
         }
 
-        if (clientRepository.findByPhone(dto.getPhone()).isPresent()) {
+        Optional<Client> existingByPhone = clientRepository.findByPhone(dto.getPhone());
+        if (existingByPhone.isPresent()) {
+            Client existingClient = existingByPhone.get();
+            if (existingClient.getPassport().equals(dto.getPassport()) && isSameClientData(existingClient, dto)) {
+                return existingClient;
+            }
             throw new MismatchClientDataException();
         }
 
@@ -159,14 +169,32 @@ public class ClientService {
         Optional<Client> existingClient = clientRepository.findByPassport(dto.getPassport());
         if (existingClient.isPresent()) {
             Client client = existingClient.get();
-            if (!client.getFirstName().equals(dto.getFirstName()) ||
-                !client.getLastName().equals(dto.getLastName()) ||
-                !client.getPhone().equals(dto.getPhone())) {
+            if (!isSameClientData(client, dto)) {
                 throw new MismatchClientDataException();
             }
             return client;
         }
 
         return createClient(dto);
+    }
+
+    private boolean isSameClientData(Client client, ClientDto dto) {
+        return equalsIgnoreCaseTrim(client.getFirstName(), dto.getFirstName()) &&
+               equalsIgnoreCaseTrim(client.getLastName(), dto.getLastName()) &&
+               equalsPhone(client.getPhone(), dto.getPhone());
+    }
+
+    private boolean equalsIgnoreCaseTrim(String left, String right) {
+        if (left == null || right == null) {
+            return left == null && right == null;
+        }
+        return left.trim().equalsIgnoreCase(right.trim());
+    }
+
+    private boolean equalsPhone(String left, String right) {
+        if (left == null || right == null) {
+            return left == null && right == null;
+        }
+        return normalizePhone(left).equals(normalizePhone(right));
     }
 }

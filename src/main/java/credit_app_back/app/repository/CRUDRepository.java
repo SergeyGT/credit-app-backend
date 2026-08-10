@@ -79,7 +79,8 @@ public abstract class CRUDRepository<E, ID extends Serializable> {
         int pageSize = pageable.getSize();
         
         if (total == 0) {
-            return Page.empty();
+            int currentPage = Math.max(pageable.getPage(), 1);
+            return Page.of(currentPage, pageSize, 0, List.of());
         }
         
         int maxPage = (int) Math.ceil((double) total / pageSize);

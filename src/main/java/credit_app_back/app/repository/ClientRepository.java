@@ -24,9 +24,21 @@ public class ClientRepository extends CRUDRepository<Client, Long> {
 
     @Transactional
     public Optional<Client> findByPhone(String phone) {
-        return findAllBy((builder, root) ->
-                new Predicate[]{builder.equal(root.get("phone"), phone)}
-        ).stream().findFirst();
+        String normalizedPhone = normalizePhone(phone);
+
+        return findAllBy((builder, root) -> new Predicate[]{
+                builder.or(
+                        builder.equal(root.get("phone"), normalizedPhone),
+                        builder.equal(root.get("phone"), "+" + normalizedPhone)
+                )
+        }).stream().findFirst();
+    }
+
+    private String normalizePhone(String phone) {
+        if (phone == null) {
+            return null;
+        }
+        return phone.startsWith("+") ? phone.substring(1) : phone;
     }
 
     @Transactional
