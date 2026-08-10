@@ -10,12 +10,6 @@ import credit_app_back.app.exception.logic.ApplicationNotFoundException;
 import credit_app_back.app.mapper.ClientMapper;
 import credit_app_back.app.repository.ClientRepository;
 import credit_app_back.app.util.ClientValidator;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.TypedQuery;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +18,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,7 +31,6 @@ public class ClientService {
     private final ClientRepository clientRepository;
     private final ClientMapper clientMapper;
     private final ClientValidator clientValidator;
-    private final EntityManager entityManager;
 
     @Value("${app.client.page-size:10}")
     private int pageSize;
@@ -74,89 +66,41 @@ public class ClientService {
         String lastName = normalizeFilter(filters.getLastName());
         String middleName = normalizeFilter(filters.getMiddleName());
         String passport = normalizeFilter(filters.getPassport());
-        String phone = normalizeFilter(filters.getPhone());
+        String phone = normalizePhone(filters.getPhone());
 
         if (firstName == null && lastName == null && middleName == null &&
-            passport == null && phone == null) {
+                passport == null && phone == null) {
             return getAllClients(page);
         }
 
         PageRequest pageRequest = PageRequest.of(page, pageSize);
-        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        Page<Client> clientPage = clientRepository.findClientsByFilters(
+                firstName,
+                lastName,
+                middleName,
+                passport,
+                phone,
+                pageRequest
+        );
 
-        CriteriaQuery<Client> selectQuery = cb.createQuery(Client.class);
-        Root<Client> root = selectQuery.from(Client.class);
-        List<Predicate> predicates = buildClientPredicates(cb, root, firstName, lastName, middleName, passport, phone);
-        selectQuery.select(root).where(predicates.toArray(new Predicate[0]));
-
-        TypedQuery<Client> typedQuery = entityManager.createQuery(selectQuery);
-        typedQuery.setFirstResult(pageRequest.getPageNumber() * pageRequest.getPageSize());
-        typedQuery.setMaxResults(pageRequest.getPageSize());
-        List<Client> clients = typedQuery.getResultList();
-
-        CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
-        Root<Client> countRoot = countQuery.from(Client.class);
-        countQuery.select(cb.count(countRoot))
-                .where(buildClientPredicates(cb, countRoot, firstName, lastName, middleName, passport, phone)
-                        .toArray(new Predicate[0]));
-        long total = entityManager.createQuery(countQuery).getSingleResult();
-
-        List<ClientDto> clientDtos = clients.stream()
+        List<ClientDto> clientDtos = clientPage.getContent().stream()
                 .map(clientMapper::toDto)
                 .collect(Collectors.toList());
 
         return new PageResponseDto<>(
-                pageRequest.getPageNumber(),
-                pageRequest.getPageSize(),
-                total,
+                clientPage.getNumber(),
+                clientPage.getSize(),
+                clientPage.getTotalElements(),
                 clientDtos
         );
     }
 
-    private List<Predicate> buildClientPredicates(
-            CriteriaBuilder cb,
-            Root<Client> root,
-            String firstName,
-            String lastName,
-            String middleName,
-            String passport,
-            String phone
-    ) {
-        List<Predicate> predicates = new ArrayList<>();
-
-        if (firstName != null) {
-            predicates.add(cb.like(
-                    cb.lower(root.get("firstName")),
-                    "%" + firstName.toLowerCase() + "%"
-            ));
+    private String normalizePhone(String value) {
+        String normalized = normalizeFilter(value);
+        if (normalized == null) {
+            return null;
         }
-
-        if (lastName != null) {
-            predicates.add(cb.like(
-                    cb.lower(root.get("lastName")),
-                    "%" + lastName.toLowerCase() + "%"
-            ));
-        }
-
-        if (middleName != null) {
-            predicates.add(cb.like(
-                    cb.lower(root.get("middleName")),
-                    "%" + middleName.toLowerCase() + "%"
-            ));
-        }
-
-        if (passport != null) {
-            predicates.add(cb.equal(root.get("passport"), passport));
-        }
-
-        if (phone != null) {
-            predicates.add(cb.or(
-                    cb.equal(root.get("phone"), phone),
-                    cb.equal(root.get("phone"), phone.startsWith("+") ? phone.substring(1) : "+" + phone)
-            ));
-        }
-
-        return predicates;
+        return normalized.startsWith("+") ? normalized.substring(1) : normalized;
     }
 
     private String normalizeFilter(String value) {

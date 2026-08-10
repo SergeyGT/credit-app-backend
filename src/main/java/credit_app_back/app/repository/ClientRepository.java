@@ -26,7 +26,7 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
        "(:lastName IS NULL OR LOWER(c.lastName) LIKE LOWER(CONCAT('%', :lastName, '%'))) AND " +
        "(:middleName IS NULL OR LOWER(c.middleName) LIKE LOWER(CONCAT('%', :middleName, '%'))) AND " +
        "(:passport IS NULL OR c.passport = :passport) AND " +
-       "(:phone IS NULL OR c.phone = :phone)")
+       "(:phone IS NULL OR c.phone = :phone OR c.phone = CONCAT('+', :phone))")
     Page<Client> findClientsByFilters(
             @Param("firstName") String firstName,
             @Param("lastName") String lastName,
