@@ -17,12 +17,6 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
-import jakarta.persistence.TypedQuery;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -76,9 +70,14 @@ public class ClientService {
             throw validationExceptions.get();
         }
 
-        if (filters.getFirstName() == null && filters.getLastName() == null &&
-            filters.getMiddleName() == null && filters.getPassport() == null &&
-            filters.getPhone() == null) {
+        String firstName = normalizeFilter(filters.getFirstName());
+        String lastName = normalizeFilter(filters.getLastName());
+        String middleName = normalizeFilter(filters.getMiddleName());
+        String passport = normalizeFilter(filters.getPassport());
+        String phone = normalizeFilter(filters.getPhone());
+
+        if (firstName == null && lastName == null && middleName == null &&
+            passport == null && phone == null) {
             return getAllClients(page);
         }
 
@@ -87,7 +86,7 @@ public class ClientService {
 
         CriteriaQuery<Client> selectQuery = cb.createQuery(Client.class);
         Root<Client> root = selectQuery.from(Client.class);
-        List<Predicate> predicates = buildClientPredicates(cb, root, filters);
+        List<Predicate> predicates = buildClientPredicates(cb, root, firstName, lastName, middleName, passport, phone);
         selectQuery.select(root).where(predicates.toArray(new Predicate[0]));
 
         TypedQuery<Client> typedQuery = entityManager.createQuery(selectQuery);
@@ -98,7 +97,8 @@ public class ClientService {
         CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
         Root<Client> countRoot = countQuery.from(Client.class);
         countQuery.select(cb.count(countRoot))
-                .where(buildClientPredicates(cb, countRoot, filters).toArray(new Predicate[0]));
+                .where(buildClientPredicates(cb, countRoot, firstName, lastName, middleName, passport, phone)
+                        .toArray(new Predicate[0]));
         long total = entityManager.createQuery(countQuery).getSingleResult();
 
         List<ClientDto> clientDtos = clients.stream()
@@ -116,40 +116,55 @@ public class ClientService {
     private List<Predicate> buildClientPredicates(
             CriteriaBuilder cb,
             Root<Client> root,
-            FindClientsDto filters
+            String firstName,
+            String lastName,
+            String middleName,
+            String passport,
+            String phone
     ) {
         List<Predicate> predicates = new ArrayList<>();
 
-        if (filters.getFirstName() != null) {
+        if (firstName != null) {
             predicates.add(cb.like(
                     cb.lower(root.get("firstName")),
-                    "%" + filters.getFirstName().toLowerCase() + "%"
+                    "%" + firstName.toLowerCase() + "%"
             ));
         }
 
-        if (filters.getLastName() != null) {
+        if (lastName != null) {
             predicates.add(cb.like(
                     cb.lower(root.get("lastName")),
-                    "%" + filters.getLastName().toLowerCase() + "%"
+                    "%" + lastName.toLowerCase() + "%"
             ));
         }
 
-        if (filters.getMiddleName() != null) {
+        if (middleName != null) {
             predicates.add(cb.like(
                     cb.lower(root.get("middleName")),
-                    "%" + filters.getMiddleName().toLowerCase() + "%"
+                    "%" + middleName.toLowerCase() + "%"
             ));
         }
 
-        if (filters.getPassport() != null) {
-            predicates.add(cb.equal(root.get("passport"), filters.getPassport()));
+        if (passport != null) {
+            predicates.add(cb.equal(root.get("passport"), passport));
         }
 
-        if (filters.getPhone() != null) {
-            predicates.add(cb.equal(root.get("phone"), filters.getPhone()));
+        if (phone != null) {
+            predicates.add(cb.or(
+                    cb.equal(root.get("phone"), phone),
+                    cb.equal(root.get("phone"), phone.startsWith("+") ? phone.substring(1) : "+" + phone)
+            ));
         }
 
         return predicates;
+    }
+
+    private String normalizeFilter(String value) {
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 
     public Client getClientById(Long id) {

@@ -140,17 +140,23 @@ public class ClientValidator {
     }
 
     private void validatePhone(String phone, List<ValidationException> exceptions) {
-        if (phone == null || phone.isBlank()) {
+        if (phone == null) {
             exceptions.add(new InvalidPhoneFormatException("Phone is required"));
             return;
         }
 
-        if (phone.length() < 10 || phone.length() > 12) {
+        String normalizedPhone = phone.trim();
+        if (normalizedPhone.isEmpty()) {
+            exceptions.add(new InvalidPhoneFormatException("Phone is required"));
+            return;
+        }
+
+        if (normalizedPhone.length() < 10 || normalizedPhone.length() > 12) {
             exceptions.add(new InvalidPhoneFormatException("Phone must contain 10-12 characters"));
             return;
         }
 
-        if (!phone.matches("^\\+?\\d{10,12}$")) {
+        if (!normalizedPhone.matches("^\\+?\\d{10,12}$")) {
             exceptions.add(new InvalidPhoneFormatException("Invalid phone format. Expected: +xxxxxxxxxxx or xxxxxxxxxxx"));
         }
     }
