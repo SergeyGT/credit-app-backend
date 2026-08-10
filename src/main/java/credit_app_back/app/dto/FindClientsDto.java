@@ -15,5 +15,5 @@ public class FindClientsDto implements Filterable {
     private String lastName;
     private String middleName;
     private String passport;
-    private String phoneNumber;
+    private String phone;
 }

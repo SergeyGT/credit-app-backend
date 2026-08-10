@@ -6,11 +6,10 @@ import credit_app_back.app.dto.FindClientsDto;
 import credit_app_back.app.exception.BaseExceptionCode;
 import credit_app_back.app.exception.GroupValidationException;
 import credit_app_back.app.exception.ValidationException;
-import credit_app_back.app.exception.validate.InvalidNameFormatException;
+import credit_app_back.app.exception.logic.InvalidNameFormatException;
 import credit_app_back.app.exception.validate.InvalidPassportFormatException;
 import credit_app_back.app.exception.validate.InvalidPhoneFormatException;
 import credit_app_back.app.exception.validate.MissingPartEmploymentDataException;
-
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -22,16 +21,12 @@ import java.util.Optional;
 @Component
 public class ClientValidator {
 
-    /**
-     * Валидация DTO для создания заявки
-     */
     public Optional<GroupValidationException> validateCreateCreditApplicationRequest(
             CreateCreditApplicationRequestDto dto
     ) {
         List<ValidationException> exceptions = new ArrayList<>();
 
         validateClientData(dto.getClient(), exceptions);
-
         validateLoanAmount(dto.getDesiredLoanAmount(), exceptions);
 
         if (exceptions.isEmpty()) {
@@ -43,22 +38,34 @@ public class ClientValidator {
 
     /**
      * Валидация DTO для поиска клиентов
+     * Проверяем ТОЛЬКО те поля, которые переданы
      */
     public Optional<GroupValidationException> validateFindClientsDto(FindClientsDto dto) {
         List<ValidationException> exceptions = new ArrayList<>();
 
-        // Если все поля null — не валидируем (поиск без фильтров)
+        // Если все поля null — пропускаем
         if (dto.getFirstName() == null && dto.getLastName() == null &&
             dto.getMiddleName() == null && dto.getPassport() == null &&
-            dto.getPhoneNumber() == null) {
+            dto.getPhone() == null) {
             return Optional.empty();
         }
 
-        validatePartOfName("firstName", dto.getFirstName(), exceptions);
-        validatePartOfName("lastName", dto.getLastName(), exceptions);
-        validatePartOfName("middleName", dto.getMiddleName(), exceptions);
-        validatePassport(dto.getPassport(), exceptions);
-        validatePhone(dto.getPhoneNumber(), exceptions);
+        // Проверяем только переданные поля
+        if (dto.getFirstName() != null) {
+            validatePartOfName("firstName", dto.getFirstName(), exceptions);
+        }
+        if (dto.getLastName() != null) {
+            validatePartOfName("lastName", dto.getLastName(), exceptions);
+        }
+        if (dto.getMiddleName() != null) {
+            validatePartOfName("middleName", dto.getMiddleName(), exceptions);
+        }
+        if (dto.getPassport() != null) {
+            validatePassport(dto.getPassport(), exceptions);
+        }
+        if (dto.getPhone() != null) {
+            validatePhone(dto.getPhone(), exceptions);
+        }
 
         if (exceptions.isEmpty()) {
             return Optional.empty();
@@ -67,9 +74,6 @@ public class ClientValidator {
         return Optional.of(new GroupValidationException(exceptions));
     }
 
-    /**
-     * Валидация DTO клиента
-     */
     public Optional<GroupValidationException> validateClientDto(ClientDto dto) {
         List<ValidationException> exceptions = new ArrayList<>();
 
@@ -97,9 +101,6 @@ public class ClientValidator {
         validateLoanPurpose(dto, exceptions);
     }
 
-    /**
-     * Валидация части имени (firstName, lastName, middleName)
-     */
     private void validatePartOfName(String fieldName, String name, List<ValidationException> exceptions) {
         // Для firstName и lastName — обязательные поля
         if (name == null || name.isBlank()) {
@@ -114,7 +115,6 @@ public class ClientValidator {
             return;
         }
 
-        // Проверка: только буквы, пробелы, дефисы, апострофы (русские и латинские)
         if (!name.matches("^[A-Za-zА-Яа-я][a-zа-я]*(?:[\\s'-][A-Za-zА-Яа-я][a-zа-я]*)*$")) {
             exceptions.add(new InvalidNameFormatException(
                 fieldName, 
@@ -161,14 +161,12 @@ public class ClientValidator {
         String position = dto.getEmploymentPosition();
         String organization = dto.getOrganizationName();
 
-        // Если нет данных о занятости — пропускаем (необязательно)
         if (startDate == null && endDate == null &&
                 (position == null || position.isBlank()) &&
                 (organization == null || organization.isBlank())) {
             return;
         }
 
-        // Если есть хоть какие-то данные — проверяем всё
         if (startDate == null) {
             exceptions.add(new MissingPartEmploymentDataException("employmentStartDate"));
         }
@@ -181,7 +179,6 @@ public class ClientValidator {
             exceptions.add(new MissingPartEmploymentDataException("organizationName"));
         }
 
-        // Проверка: endDate должен быть после startDate
         if (startDate != null && endDate != null && endDate.isBefore(startDate)) {
             exceptions.add(new MissingPartEmploymentDataException("Employment end date must be after start date"));
         }

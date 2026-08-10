@@ -7,7 +7,6 @@ import credit_app_back.app.entity.Client;
 import credit_app_back.app.mapper.ClientMapper;
 import credit_app_back.app.service.ClientService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -25,7 +24,7 @@ public class ClientController {
 
     @GetMapping
     public ResponseEntity<PageResponseDto<ClientDto>> getAllClients(
-            @RequestParam(defaultValue = "0") @Positive int page
+            @RequestParam(defaultValue = "0") int page  
     ) {
         log.debug("GET /api/clients, page: {}", page);
         PageResponseDto<ClientDto> response = clientService.getAllClients(page);
@@ -34,18 +33,18 @@ public class ClientController {
 
     @GetMapping("/find")
     public ResponseEntity<PageResponseDto<ClientDto>> findClients(
-            @RequestParam(defaultValue = "0") @Positive int page,
-            @RequestParam(required = false) String phoneNumber,
+            @RequestParam(defaultValue = "0") int page,  
+            @RequestParam(required = false) String phone,
             @RequestParam(required = false) String passport,
             @RequestParam(required = false) String firstName,
             @RequestParam(required = false) String lastName,
             @RequestParam(required = false) String middleName
     ) {
         log.debug("GET /api/clients/find, page: {}, phone: {}, passport: {}, firstName: {}, lastName: {}, middleName: {}",
-                page, phoneNumber, passport, firstName, lastName, middleName);
+                page, phone, passport, firstName, lastName, middleName);
 
         FindClientsDto filters = FindClientsDto.builder()
-                .phoneNumber(phoneNumber)
+                .phone(phone)
                 .passport(passport)
                 .firstName(firstName)
                 .lastName(lastName)

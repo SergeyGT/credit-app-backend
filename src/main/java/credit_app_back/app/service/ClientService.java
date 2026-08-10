@@ -64,7 +64,7 @@ public class ClientService {
 
         if (filters.getFirstName() == null && filters.getLastName() == null &&
             filters.getMiddleName() == null && filters.getPassport() == null &&
-            filters.getPhoneNumber() == null) {
+            filters.getPhone() == null) {
             return getAllClients(page);
         }
 
@@ -74,7 +74,7 @@ public class ClientService {
                 filters.getLastName(),
                 filters.getMiddleName(),
                 filters.getPassport(),
-                filters.getPhoneNumber(),
+                filters.getPhone(),
                 pageRequest
         );
 

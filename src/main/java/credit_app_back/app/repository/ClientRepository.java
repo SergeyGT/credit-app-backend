@@ -22,17 +22,17 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     );
     
     @Query("SELECT c FROM Client c WHERE " +
-           "(:firstName IS NULL OR LOWER(c.firstName) LIKE LOWER(CONCAT('%', :firstName, '%'))) AND " +
-           "(:lastName IS NULL OR LOWER(c.lastName) LIKE LOWER(CONCAT('%', :lastName, '%'))) AND " +
-           "(:middleName IS NULL OR LOWER(c.middleName) LIKE LOWER(CONCAT('%', :middleName, '%'))) AND " +
-           "(:passport IS NULL OR c.passport = :passport) AND " +
-           "(:phoneNumber IS NULL OR c.phone = :phoneNumber)")
-    Page<Client> findClientsByFilters(
-            @Param("firstName") String firstName,
-            @Param("lastName") String lastName,
-            @Param("middleName") String middleName,
-            @Param("passport") String passport,
-            @Param("phoneNumber") String phoneNumber,
-            Pageable pageable
-    );
+       "(:firstName IS NULL OR c.firstName LIKE CONCAT('%', :firstName, '%')) AND " +
+       "(:lastName IS NULL OR c.lastName LIKE CONCAT('%', :lastName, '%')) AND " +
+       "(:middleName IS NULL OR c.middleName LIKE CONCAT('%', :middleName, '%')) AND " +
+       "(:passport IS NULL OR c.passport = :passport) AND " +
+       "(:phone IS NULL OR c.phone = :phone)")
+        Page<Client> findClientsByFilters(
+                @Param("firstName") String firstName,
+                @Param("lastName") String lastName,
+                @Param("middleName") String middleName,
+                @Param("passport") String passport,
+                @Param("phone") String phone,
+                Pageable pageable
+        );
 }
