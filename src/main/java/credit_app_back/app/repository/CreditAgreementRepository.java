@@ -1,39 +1,60 @@
 package credit_app_back.app.repository;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
 import credit_app_back.app.entity.CreditAgreeStatus;
 import credit_app_back.app.entity.CreditAgreement;
+import jakarta.persistence.criteria.Predicate;
+import org.hibernate.SessionFactory;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Repository
-public interface CreditAgreementRepository extends JpaRepository<CreditAgreement, Long> {
-    Optional<CreditAgreement> findById(Long id);
-    List<CreditAgreement> findAll();
-    List<CreditAgreement> findBySignStatus(CreditAgreeStatus signStatus);
-        
-    default List<CreditAgreement> findSigned() {
-        return findBySignStatus(CreditAgreeStatus.SIGNED);
+public class CreditAgreementRepository extends CRUDRepository<CreditAgreement, Long> {
+
+    public CreditAgreementRepository(SessionFactory sessionFactory) {
+        super(CreditAgreement.class, sessionFactory);
     }
 
-    Optional<CreditAgreement> findByCreditApplicationId(Long applicationId);
+    @Transactional
+    public Optional<CreditAgreement> findById(Long id) {
+        return super.findById(id);
+    }
 
-    Page<CreditAgreement> findBySignStatus(CreditAgreeStatus status, Pageable pageable);
+    @Transactional
+    public Optional<CreditAgreement> findByCreditApplicationId(Long applicationId) {
+        return findAllBy((builder, root) ->
+                new Predicate[]{builder.equal(root.get("creditApplication").get("id"), applicationId)}
+        ).stream().findFirst();
+    }
 
-    @Query("SELECT a FROM CreditAgreement a WHERE " +
-           "(:status IS NULL OR a.signStatus = :status) AND " +
-           "(:clientId IS NULL OR a.creditApplication.client.id = :clientId)")
-    Page<CreditAgreement> findAgreementsByFilters(
-            @Param("status") CreditAgreeStatus status,
-            @Param("clientId") Long clientId,
+    @Transactional
+    public Page<CreditAgreement> findBySignStatus(CreditAgreeStatus status, Pageable pageable) {
+        return findAllBy(pageable, (builder, root) ->
+                new Predicate[]{builder.equal(root.get("signStatus"), status)}
+        );
+    }
+
+    @Transactional
+    public Page<CreditAgreement> findAgreementsByFilters(
+            CreditAgreeStatus status,
+            Long clientId,
             Pageable pageable
-    );
+    ) {
+        return findAllBy(pageable, (builder, root) -> {
+            Predicate[] predicates = new Predicate[2];
+            int index = 0;
+
+            if (status != null) {
+                predicates[index++] = builder.equal(root.get("signStatus"), status);
+            }
+            if (clientId != null) {
+                predicates[index++] = builder.equal(root.get("creditApplication").get("client").get("id"), clientId);
+            }
+
+            Predicate[] finalPredicates = new Predicate[index];
+            System.arraycopy(predicates, 0, finalPredicates, 0, index);
+            return finalPredicates;
+        });
+    }
 }
